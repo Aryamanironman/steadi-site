@@ -1,0 +1,1807 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STEADI — Every meal, steadier</title>
+<meta name="description" content="STEADI is a tremor-stabilising utensil that learns the hand that holds it. Scroll to open it up, part by part.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #EFEBF7;        /* soft lavender-white — display + body type on dusk */
+    --paper: #16141F;      /* deep dusk ground — the cream model glows against it */
+    --paper-2: #1E1B29;    /* raised ground */
+    --cream: #F2EDE4;      /* product ceramic cream */
+    --mist: #A79FC4;       /* muted body on dusk */
+    --slate: #9DB8E8;      /* luminous silicone blue — from the product's LED */
+    --slate-deep: #5F7DB2;
+    --green: #6FE0A8;      /* STEADI green — luminous wordmark */
+    --led: #FFF3DC;        /* warm LED white */
+    --hairline: rgba(239, 235, 247, 0.16);
+    --canvas-x: 1440;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Archivo", system-ui, sans-serif;
+    font-variation-settings: "wdth" 100, "wght" 400;
+    font-size: 17px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ---------- drifting aurora — a slow nebula so the dusk never sits still ---------- */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: -22%;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      radial-gradient(38% 30% at 22% 24%, rgba(95, 125, 178, 0.17), transparent 70%),
+      radial-gradient(34% 28% at 80% 76%, rgba(126, 96, 196, 0.13), transparent 70%),
+      radial-gradient(26% 22% at 76% 20%, rgba(111, 224, 168, 0.06), transparent 72%);
+    animation: aurora 26s ease-in-out infinite alternate;
+  }
+
+  @keyframes aurora {
+    from { transform: translate3d(-2.2%, -1.4%, 0) rotate(-2deg); }
+    to   { transform: translate3d(2.4%, 1.8%, 0) rotate(2.4deg); }
+  }
+
+  /* ---------- fixed 3D stage ---------- */
+  #stage {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    touch-action: pan-y;
+    cursor: grab;
+  }
+  #stage.dragging { cursor: grabbing; }
+  #stage canvas { display: block; }
+
+  /* ---------- vignette over the render, under the text ---------- */
+  .vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 120% 90% at 50% 45%, transparent 52%, rgba(4, 3, 9, 0.55) 100%);
+  }
+
+  /* ---------- scroll story ---------- */
+  main {
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 8vh 7vw;
+  }
+
+  .copy {
+    pointer-events: auto;
+    max-width: 30em;
+    position: relative;
+    /* glass story card — the copy floats on frosted panels over the render */
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid var(--hairline);
+    border-radius: 22px;
+    padding: 2.1rem 2.3rem;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 24px 70px rgba(4, 3, 9, 0.45);
+  }
+
+  /* copy drifts in as its section scrolls into view */
+  .copy {
+    opacity: 0;
+    transform: translateY(26px);
+    transition: opacity 0.8s cubic-bezier(0.22, 0.61, 0.36, 1), transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .copy.in { opacity: 1; transform: none; }
+
+  .copy.right { margin-left: auto; }
+
+  h1, h2 {
+    font-variation-settings: "wdth" 122, "wght" 640;
+    letter-spacing: -0.015em;
+    line-height: 1.06;
+    text-wrap: balance;
+  }
+
+  h1 { font-size: clamp(2.6rem, 6.2vw, 4.6rem); }
+  h2 { font-size: clamp(1.9rem, 3.6vw, 2.9rem); }
+
+  .wordmark {
+    font-variation-settings: "wdth" 125, "wght" 760;
+    font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+    letter-spacing: 0.34em;
+    color: var(--green);
+    margin-bottom: 1.4rem;
+  }
+
+  /* chapter kicker — the story's numbering */
+  .chapter {
+    font-variation-settings: "wdth" 118, "wght" 620;
+    font-size: 0.86rem;
+    letter-spacing: 0.3em;
+    color: var(--slate);
+    margin-bottom: 0.9rem;
+  }
+
+  .lede {
+    color: var(--mist);
+    max-width: 27em;
+    margin-top: 1.2rem;
+  }
+
+  .scrollhint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7em;
+    margin-top: 2.6rem;
+    color: var(--slate);
+    font-size: 0.92rem;
+    font-variation-settings: "wdth" 100, "wght" 500;
+  }
+
+  .scrollhint .stem {
+    width: 1px;
+    height: 2.4rem;
+    background: linear-gradient(var(--slate), transparent);
+    animation: drip 2.2s ease-in-out infinite;
+  }
+
+  @keyframes drip {
+    0%   { transform: scaleY(0.2); transform-origin: top; opacity: 0.2; }
+    45%  { transform: scaleY(1); opacity: 1; }
+    100% { transform: scaleY(0.2); transform-origin: top; opacity: 0.2; }
+  }
+
+  /* ---------- callout facts (tour sections only) ---------- */
+  .facts {
+    list-style: none;
+    margin-top: 2.2rem;
+    display: grid;
+    gap: 1.35rem;
+  }
+
+  .facts .fact {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0.2rem 1rem;
+    padding-left: 1rem;
+    border-left: 1px solid var(--hairline);
+    transition: border-color 0.3s ease;
+  }
+
+  .fact:hover { border-left-color: var(--slate); }
+
+  .factshint {
+    margin-top: 1.1rem;
+    font-size: 0.84rem;
+    color: var(--slate);
+    letter-spacing: 0.02em;
+  }
+
+  .fact .no {
+    color: var(--slate);
+    font-variation-settings: "wdth" 112, "wght" 560;
+    font-size: 0.95rem;
+    padding-top: 0.1rem;
+  }
+
+  .fact .name {
+    font-variation-settings: "wdth" 112, "wght" 560;
+    font-size: 1.04rem;
+    letter-spacing: 0.01em;
+    transition: color 0.3s ease;
+  }
+
+  .fact:hover .name { color: var(--slate); }
+
+  .fact .line {
+    grid-column: 2;
+    color: var(--mist);
+    font-size: 0.94rem;
+    line-height: 1.5;
+  }
+
+  /* ---------- finale ---------- */
+  .section.finale {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    min-height: 108vh;
+    padding-bottom: 16vh;
+  }
+
+  .finale .copy { max-width: 34em; }
+
+  .finale .lede { margin-left: auto; margin-right: auto; }
+
+  /* wide screens: the epilogue keeps its own left column while the product
+     parks on the right (see resolveStops) — narrow screens stay centred */
+  @media (min-width: 761px) {
+    .finale .copy {
+      margin-left: 7vw;
+      margin-right: auto; /* beat the section's justify-content:center */
+      text-align: left;
+    }
+    .finale .lede,
+    .finale .app-lines { margin-left: 0; }
+  }
+
+  .app-lines {
+    margin: 2.8rem auto 0;
+    display: grid;
+    gap: 0;
+    max-width: 30em;
+  }
+
+  .app-lines .app-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 2rem;
+    padding: 0.95rem 0.2rem;
+    border-top: 1px solid var(--hairline);
+    text-align: left;
+  }
+
+  .app-lines .app-line:last-child { border-bottom: 1px solid var(--hairline); }
+
+  .app-line .what { font-variation-settings: "wdth" 108, "wght" 540; font-size: 0.98rem; }
+  .app-line .why { color: var(--mist); font-size: 0.9rem; text-align: right; }
+
+  .footnote {
+    margin-top: 3rem;
+    color: var(--mist);
+    font-size: 0.86rem;
+    max-width: 26em;
+  }
+
+  .colophon {
+    margin-top: 2.4rem;
+    display: flex;
+    gap: 1.6rem;
+    justify-content: center;
+    align-items: baseline;
+    color: var(--mist);
+    font-size: 0.84rem;
+  }
+
+  .colophon .wd { color: var(--green); letter-spacing: 0.3em; font-variation-settings: "wdth" 118, "wght" 660; }
+
+  /* ---------- utensil switcher (finale) ---------- */
+  #utensil-switch {
+    position: fixed;
+    left: 50%;
+    bottom: 2.1rem;
+    transform: translateX(-50%) translateY(0.6rem);
+    z-index: 3;
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.32rem;
+    background: rgba(30, 27, 41, 0.78);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(4, 3, 9, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  #utensil-switch.show { opacity: 1; pointer-events: auto; transform: translateX(-50%); }
+
+  .usw-btn {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    border-radius: 999px;
+    padding: 0.42rem 1.05rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-variation-settings: "wdth" 108, "wght" 540;
+    color: var(--mist);
+    cursor: pointer;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+  .usw-btn:hover { color: var(--ink); }
+  .usw-btn.active {
+    background: var(--slate);
+    color: #16141F;
+    box-shadow: 0 0 18px rgba(157, 184, 232, 0.45);
+  }
+
+  /* ---------- progress rail ---------- */
+  #rail {
+    position: fixed;
+    right: 2.1vw;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    width: 2px;
+    height: 34vh;
+    background: var(--hairline);
+    pointer-events: none;
+  }
+
+  #rail .dot {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--slate);
+    box-shadow: 0 0 12px rgba(157, 184, 232, 0.8);
+  }
+
+  /* ---------- loader / failure banner ---------- */
+  #loadfail {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 9;
+    padding: 0.9rem 7vw;
+    background: var(--paper-2);
+    color: var(--ink);
+    font-size: 0.88rem;
+    display: none;
+  }
+
+  #loadfail.show { display: block; }
+
+  noscript .ns {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 10;
+    padding: 1rem 7vw;
+    background: var(--paper-2);
+    color: var(--ink);
+  }
+
+  /* ---------- slogan + the highlighted word ---------- */
+  .hl {
+    color: var(--green);
+    font-style: normal;
+    text-shadow: 0 0 22px rgba(111, 224, 168, 0.45);
+  }
+  .slogan {
+    margin: 1.15rem 0 0;
+    font-variation-settings: "wdth" 116, "wght" 560;
+    font-size: clamp(1.02rem, 1.7vw, 1.3rem);
+    letter-spacing: 0.045em;
+    color: var(--ink);
+  }
+
+  /* ---------- X-ray toggle + drag hint ---------- */
+  #xray {
+    position: fixed;
+    top: 1.35rem;
+    right: 2vw;
+    z-index: 4;
+    appearance: none;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-variation-settings: "wdth" 108, "wght" 540;
+    letter-spacing: 0.06em;
+    color: var(--mist);
+    background: rgba(30, 27, 41, 0.6);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 0.5rem 1.1rem;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+  #xray:hover { color: var(--ink); }
+  #xray.on {
+    color: var(--slate);
+    border-color: var(--slate);
+    box-shadow: 0 0 16px rgba(157, 184, 232, 0.35);
+  }
+  #draghint {
+    position: fixed;
+    left: 7vw;
+    bottom: 9vh;
+    z-index: 3;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    color: var(--mist);
+    background: rgba(30, 27, 41, 0.6);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 0.45rem 1rem;
+    backdrop-filter: blur(8px);
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+    animation: hintbob 2.6s ease-in-out infinite;
+  }
+  #draghint.bye { opacity: 0; }
+  @keyframes hintbob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  /* ---------- part callouts: hover tooltip + pinned click card ---------- */
+  #stage.over-part { cursor: pointer; }
+  #part-tip {
+    position: fixed;
+    z-index: 6;
+    pointer-events: none;
+    transform: translate(16px, -34px);
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    color: var(--ink);
+    background: rgba(30, 27, 41, 0.85);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    padding: 0.3rem 0.65rem;
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    white-space: nowrap;
+  }
+  #part-tip.show { opacity: 1; }
+  #part-dot {
+    position: fixed;
+    z-index: 6;
+    pointer-events: none;
+    width: 9px;
+    height: 9px;
+    margin: -4.5px 0 0 -4.5px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 10px rgba(111, 224, 168, 0.9);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  #part-dot.show { opacity: 1; }
+  #part-line {
+    position: fixed;
+    z-index: 6;
+    pointer-events: none;
+    height: 1.5px;
+    transform-origin: 0 50%;
+    background: rgba(111, 224, 168, 0.55);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  #part-line.show { opacity: 1; }
+  #part-card {
+    position: fixed;
+    z-index: 6;
+    pointer-events: none;
+    max-width: 15rem;
+    background: rgba(30, 27, 41, 0.88);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 0.75rem 0.95rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 14px 40px rgba(4, 3, 9, 0.5);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  #part-card.show { opacity: 1; }
+  #part-name {
+    margin: 0;
+    font-variation-settings: "wdth" 112, "wght" 600;
+    color: var(--green);
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+  }
+  #part-blurb {
+    margin: 0.3rem 0 0;
+    color: var(--mist);
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+  #part-card .part-card-hint {
+    margin: 0.45rem 0 0;
+    font-size: 0.68rem;
+    color: var(--slate-deep);
+    letter-spacing: 0.05em;
+  }
+
+  /* ---------- reduced motion ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .scrollhint .stem { animation: none; }
+    body::before { animation: none; }
+    .copy { opacity: 1; transform: none; transition: none; }
+    #draghint { animation: none; }
+  }
+
+  /* ---------- narrow screens ---------- */
+  @media (max-width: 760px) {
+    .section { padding: 10vh 8vw; align-items: flex-end; }
+    .copy { max-width: 100%; padding: 1.6rem 1.5rem; }
+    .app-line .why { display: none; }
+    #rail { right: 3.4vw; }
+    #utensil-switch { bottom: 1.1rem; }
+    .usw-btn { padding: 0.36rem 0.78rem; font-size: 0.82rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<button id="xray" type="button" aria-pressed="false">X-ray</button>
+<div id="draghint" aria-hidden="true">drag to spin</div>
+<div id="part-tip" aria-hidden="true"></div>
+<div id="part-dot" aria-hidden="true"></div>
+<div id="part-line" aria-hidden="true"></div>
+<div id="part-card" aria-hidden="true">
+  <p id="part-name"></p>
+  <p id="part-blurb"></p>
+  <p class="part-card-hint">click anywhere to close</p>
+</div>
+
+<main>
+
+  <!-- 1 · hero -->
+  <section class="section hero">
+    <div class="copy">
+      <p class="wordmark">STEADI</p>
+      <h1>Every meal, steadier.</h1>
+      <p class="slogan"><em class="hl">Independence</em>, served daily.</p>
+      <p class="lede">A stabilising handle that grips the cutlery you already own — so tremor never takes your <em class="hl">independence</em> off the table. Scroll, and we'll take it apart together: every part, and what it does.</p>
+      <p class="scrollhint"><span class="stem" aria-hidden="true"></span> Scroll to open it up</p>
+    </div>
+  </section>
+
+  <!-- 2 · ergonomics -->
+  <section class="section">
+    <div class="copy right">
+      <p class="chapter">Chapter 01 · The body</p>
+      <h2>Shaped for hands that shake.</h2>
+      <p class="lede">The story starts with the shell. Ceramic-cream, soft to the touch, gently curved and light enough to lift all dinner long — with a grip that holds on when fingers can't.</p>
+      <ul class="facts">
+        <li class="fact" data-part="shellUpper">
+          <span class="no" aria-hidden="true">1</span>
+          <span class="name">Soft-touch shell</span>
+          <span class="line">Warm in the hand, wiped clean in seconds.</span>
+        </li>
+        <li class="fact" data-part="gripPatch">
+          <span class="no" aria-hidden="true">2</span>
+          <span class="name">Tactile grip band</span>
+          <span class="line">Fine dots on the flank give unsteady fingers something to find.</span>
+        </li>
+      </ul>
+      <p class="factshint">Hover a line — its part lights up in the model.</p>
+    </div>
+  </section>
+
+  <!-- 3 · the opening -->
+  <section class="section">
+    <div class="copy">
+      <p class="chapter">Chapter 02 · The opening</p>
+      <h2>Your cutlery. Your table.</h2>
+      <p class="lede">No proprietary heads, nothing new to learn: the flexible silicone liner grips any fork, spoon or knife you already own — 6 to 16 millimetres. It lifts out when the meal is done.</p>
+      <ul class="facts">
+        <li class="fact" data-part="linerCup">
+          <span class="no" aria-hidden="true">1</span>
+          <span class="name">Flexible silicone liner</span>
+          <span class="line">Accommodates a wide range of utensil handles, 6–16 mm.</span>
+        </li>
+        <li class="fact" data-part="collar">
+          <span class="no" aria-hidden="true">2</span>
+          <span class="name">Lift-out cleaning</span>
+          <span class="line">The liner pops free of the collar for washing between meals.</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 4 · the gimbal -->
+  <section class="section">
+    <div class="copy right">
+      <p class="chapter">Chapter 03 · The steadiness</p>
+      <h2>Two servos, one steady spoon.</h2>
+      <p class="lede">A yaw-and-pitch gimbal counters the tremor as it happens — quiet correction, never more than a few degrees, up to 85% steadier. You'd miss it if you didn't watch.</p>
+      <ul class="facts">
+        <li class="fact" data-part="yawServo">
+          <span class="no" aria-hidden="true">1</span>
+          <span class="name">Yaw servo</span>
+          <span class="line">Steadies the side-to-side drift of the hand.</span>
+        </li>
+        <li class="fact" data-part="pitchServo">
+          <span class="no" aria-hidden="true">2</span>
+          <span class="name">Pitch servo</span>
+          <span class="line">Levels the lift, so soup arrives as soup.</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 5 · senses + brain -->
+  <section class="section">
+    <div class="copy">
+      <p class="chapter">Chapter 04 · The senses</p>
+      <h2>It feels the tremor, then learns it.</h2>
+      <p class="lede">A six-axis sensor reads the hand hundreds of times a second. On the device, a small brain turns that reading into learning — so every meal logged is progress you, your family and your doctor can see.</p>
+      <ul class="facts">
+        <li class="fact" data-part="imuGroup">
+          <span class="no" aria-hidden="true">1</span>
+          <span class="name">Six-axis IMU</span>
+          <span class="line">Senses motion and tilt at the wrist, where tremor lives.</span>
+        </li>
+        <li class="fact" data-part="pcbGroup">
+          <span class="no" aria-hidden="true">2</span>
+          <span class="name">On-device learning</span>
+          <span class="line">Adapts to each user's tremor signature, meal after meal.</span>
+        </li>
+        <li class="fact" data-part="pcbGroup">
+          <span class="no" aria-hidden="true">3</span>
+          <span class="name">Reports worth sharing</span>
+          <span class="line">Real sensor data, one tap to a doctor or a family member.</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 6 · power -->
+  <section class="section">
+    <div class="copy right">
+      <p class="chapter">Chapter 05 · The heart</p>
+      <h2>A day of meals on one charge.</h2>
+      <p class="lede">Deeper down, a small battery keeps the heart beating. One button, two presses: a short press turns it on, a long press changes mode. The little light keeps count.</p>
+      <ul class="facts">
+        <li class="fact" data-part="btnGroup">
+          <span class="no" aria-hidden="true">1</span>
+          <span class="name">Mode / power button</span>
+          <span class="line">Short press on / off · long press mode change.</span>
+        </li>
+        <li class="fact" data-part="lowerLed">
+          <span class="no" aria-hidden="true">2</span>
+          <span class="name">Indicator light</span>
+          <span class="line">Shows battery level and mode status at a glance.</span>
+        </li>
+        <li class="fact" data-part="battGroup">
+          <span class="no" aria-hidden="true">3</span>
+          <span class="name">Battery + clean power</span>
+          <span class="line">A full day of meals per charge, with a regulator keeping the current steady.</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 7 · reassemble + dock -->
+  <section class="section">
+    <div class="copy">
+      <p class="chapter">Chapter 06 · Together again</p>
+      <h2>Rest it in the dock.</h2>
+      <p class="lede">Every part returns where it belongs. A deep pocket holds the handle overnight; a small light keeps watch on the charge. By morning, it's ready to do it all again — no setup, no fuss, no help needed.</p>
+    </div>
+  </section>
+
+  <!-- 8 · finale -->
+  <section class="section finale">
+    <div class="copy">
+      <p class="chapter">Epilogue</p>
+      <h2><em class="hl">Independence</em>, dignity and confidence — back at the table.</h2>
+      <p class="lede">One smart handle, every utensil, every hand. And because STEADI pairs with a companion app, families stay close and clinicians stay in the loop.</p>
+      <p class="lede switchhint">Try it yourself — slide through spoon, fork and knife on the model below.</p>
+      <div class="app-lines">
+        <div class="app-line">
+          <span class="what">Tremor tracking</span>
+          <span class="why">Patterns over time, not guesses at the clinic</span>
+        </div>
+        <div class="app-line">
+          <span class="what">Doctor reports</span>
+          <span class="why">One tap to share real sensor data</span>
+        </div>
+        <div class="app-line">
+          <span class="what">Family monitoring</span>
+          <span class="why">Care check-ins and smart reminders, anywhere</span>
+        </div>
+      </div>
+      <p class="footnote">Designed for NDIS participants, aged care and tremor clinics across Australia.</p>
+      <div class="colophon">
+        <span class="wd">STEADI</span>
+        <span>Every meal, steadier</span>
+        <span>December 2026</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="rail" aria-hidden="true"><span class="dot"></span></div>
+<div id="utensil-switch" role="group" aria-label="Choose the utensil in the model">
+  <button class="usw-btn active" data-utensil="spoon" aria-pressed="true">Spoon</button>
+  <button class="usw-btn" data-utensil="fork" aria-pressed="false">Fork</button>
+  <button class="usw-btn" data-utensil="knife" aria-pressed="false">Knife</button>
+</div>
+<div id="loadfail" role="status"></div>
+<noscript><div class="ns">STEADI needs JavaScript for the 3D view — the story above still reads without it.</div></noscript>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+
+/* ================= failure trap ================= */
+const loadfail = document.getElementById("loadfail");
+function fail(msg) {
+  loadfail.textContent = msg;
+  loadfail.classList.add("show");
+}
+window.addEventListener("error", (e) => {
+  fail("Something went wrong loading the 3D view" + (e.message ? ": " + e.message : "") + " — check your connection (STEADI loads Three.js from a CDN).");
+});
+
+/* ================= palette ================= */
+const C = {
+  ink:    0x181119,
+  paper:  0x16141F,   /* deep dusk — matches the CSS ground; the cream shell glows against it */
+  cream:  0xF1ECE2,
+  cream2: 0xE7E0D2,
+  mist:   0xA99FA6,
+  slate:  0x7D93B5,
+  slate2: 0x46587A,
+  charcoal: 0x2E2734,
+  pcb:    0x1E2B26,
+  imuPcb: 0x2B4A9B,
+  servo:  0x33405A,
+  gold:   0xC9A84C,
+  metal:  0xB9BCC2,
+  led:    0xFFF3DC,
+  wireRed: 0xA62B2B,
+  wireBlk: 0x1A171E
+};
+
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ================= renderer / scene ================= */
+const stage = document.getElementById("stage");
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.12;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(C.paper);
+scene.fog = new THREE.Fog(C.paper, 8.0, 16);
+
+/* soft studio environment — gives the plastic its gentle sheen */
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.48;
+
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 60);
+let camZBoost = 0; // portrait boost
+
+/* ================= lights ================= */
+const key = new THREE.DirectionalLight(0xFFF2E0, 1.45);
+key.position.set(4.5, 6.5, 5.5);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = -5; key.shadow.camera.right = 5;
+key.shadow.camera.top = 5;  key.shadow.camera.bottom = -5;
+key.shadow.camera.far = 25;
+key.shadow.bias = -0.0004;
+key.shadow.radius = 6;
+scene.add(key);
+
+const fill = new THREE.DirectionalLight(0xBCC8E4, 0.32);
+fill.position.set(-5, 3, 3.5);
+scene.add(fill);
+
+/* luminous blue rim — echoes the product's LED, carves the shell out of the dusk */
+const rim = new THREE.DirectionalLight(0x8FB4FF, 1.5);
+rim.position.set(-2, 4, -6);
+scene.add(rim);
+
+scene.add(new THREE.AmbientLight(0x6A5F8A, 0.6));
+
+/* ================= ground ================= */
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(14, 48),
+  new THREE.ShadowMaterial({ opacity: 0.45 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+/* ================= materials ================= */
+/* DoubleSide: lathe shells are open surfaces — interiors must be opaque */
+const shellMat = new THREE.MeshPhysicalMaterial({ color: C.cream, roughness: 0.52, metalness: 0.0, clearcoat: 0.35, clearcoatRoughness: 0.55, side: THREE.DoubleSide });
+shellMat.userData.xray = true;  /* X-ray toggle turns the cream body to glass */
+const shell2Mat = new THREE.MeshPhysicalMaterial({ color: C.cream2, roughness: 0.55, metalness: 0.0, clearcoat: 0.3, clearcoatRoughness: 0.55, side: THREE.DoubleSide });
+const linerMat = new THREE.MeshStandardMaterial({ color: C.slate, roughness: 0.75, metalness: 0.02, side: THREE.DoubleSide, emissive: C.slate, emissiveIntensity: 0 });  /* matte silicone — flashes when the utensil changes */
+const btnMat = new THREE.MeshStandardMaterial({ color: C.slate, roughness: 0.42, metalness: 0.03 });  /* harder plastic button */
+const slate2Mat = new THREE.MeshStandardMaterial({ color: C.slate2, roughness: 0.5, metalness: 0.05, side: THREE.DoubleSide });
+const charcoalMat = new THREE.MeshStandardMaterial({ color: C.charcoal, roughness: 0.42, metalness: 0.25, side: THREE.DoubleSide });
+const pcbMat = new THREE.MeshStandardMaterial({ color: C.pcb, roughness: 0.5, metalness: 0.2, side: THREE.DoubleSide });
+const imuMat = new THREE.MeshStandardMaterial({ color: C.imuPcb, roughness: 0.5, metalness: 0.15, side: THREE.DoubleSide });  /* GY-521 blue */
+const servoMat = new THREE.MeshStandardMaterial({ color: C.servo, roughness: 0.5, metalness: 0.2 });
+const goldMat = new THREE.MeshStandardMaterial({ color: C.gold, roughness: 0.3, metalness: 0.85 });
+const metalMat = new THREE.MeshStandardMaterial({ color: C.metal, roughness: 0.28, metalness: 0.9 });
+const wireRedMat = new THREE.MeshStandardMaterial({ color: C.wireRed, roughness: 0.6 });
+const wireBlkMat = new THREE.MeshStandardMaterial({ color: C.wireBlk, roughness: 0.6 });
+const wireSigMat = new THREE.MeshStandardMaterial({ color: 0xC77B2B, roughness: 0.6 });
+const ledMat = new THREE.MeshStandardMaterial({
+  color: C.led, emissive: C.led, emissiveIntensity: 1.6, roughness: 0.3
+});
+
+/* shadows on all product parts */
+function shadowAll(root) {
+  root.traverse((o) => {
+    if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+  });
+}
+
+/* power-symbol glyph on canvas texture */
+function powerGlyphTexture(color) {
+  const s = 128;
+  const cv = document.createElement("canvas");
+  cv.width = s; cv.height = s;
+  const g = cv.getContext("2d");
+  g.strokeStyle = color;
+  g.lineWidth = 11;
+  g.lineCap = "round";
+  g.beginPath();
+  g.arc(s / 2, s / 2 + 8, 34, Math.PI * 0.16, Math.PI * 0.84, false);
+  g.stroke();
+  g.beginPath();
+  g.moveTo(s / 2, s / 2 - 46);
+  g.lineTo(s / 2, s / 2 - 2);
+  g.stroke();
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+/* ================= handle profile ================= */
+/* control points for the lathe: [radius, y] bottom→top, matching the
+   reference render — slim waist, gentle taper, flared mouth at the top.
+   Sampled through a Catmull-Rom spline so the shell reads as one smooth
+   moulded surface instead of a cone chain. */
+const profile = [
+  [0.001, 0.00],
+  [0.20,  0.02],
+  [0.275, 0.16],
+  [0.29,  0.55],
+  [0.29,  1.05],
+  [0.27,  1.50],
+  [0.242, 1.95],
+  [0.222, 2.35],
+  [0.220, 2.60],
+  [0.232, 2.74]
+];
+const SHELL_SPLIT = 1.5;   // where the shell halves part
+
+function sampledProfile(ctrl, samples = 72) {
+  const curve = new THREE.SplineCurve(ctrl.map(([r, y]) => new THREE.Vector2(r, y)));
+  return curve.getPoints(samples).map((p) => new THREE.Vector2(Math.max(p.x, 0.001), p.y));
+}
+function latheFrom(pts, segments = 96) {
+  return new THREE.LatheGeometry(pts, segments);
+}
+const shellPts = sampledProfile(profile);
+
+function radiusAt(y) {
+  for (let i = 0; i < shellPts.length - 1; i++) {
+    const a = shellPts[i], b = shellPts[i + 1];
+    if ((y >= a.y && y <= b.y) || (y >= b.y && y <= a.y)) {
+      const t = Math.abs(y - a.y) / Math.max(Math.abs(b.y - a.y), 1e-5);
+      return a.x + (b.x - a.x) * t;
+    }
+  }
+  return y <= shellPts[0].y ? shellPts[0].x : shellPts[shellPts.length - 1].x;
+}
+
+/* ================= product ================= */
+const product = new THREE.Group();
+scene.add(product);
+
+/* the handle leans slightly, as it sits in the dock */
+const handleGroup = new THREE.Group();
+handleGroup.rotation.z = 0.09; // ~5° lean in the pocket
+product.add(handleGroup);
+
+/* dock */
+const dockGroup = new THREE.Group();
+product.add(dockGroup);
+
+/* ---------- dock shell: tall rounded pedestal — a proper charging stand ---------- */
+const dock = new THREE.Mesh(
+  latheFrom(sampledProfile([
+    [0.001, 0.00],
+    [0.50,  0.00],
+    [0.585, 0.06],
+    [0.60,  0.22],
+    [0.60,  0.42],
+    [0.575, 0.61],
+    [0.530, 0.77],
+    [0.500, 0.86],
+    [0.490, 0.90],
+    [0.450, 0.87],
+    [0.430, 0.70],
+    [0.415, 0.48],
+    [0.412, 0.35],
+    [0.001, 0.32]
+  ], 48), 80),
+  shellMat
+);
+dockGroup.add(dock);
+
+/* dock light (front, small warm dot) */
+const dockLed = new THREE.Mesh(new THREE.SphereGeometry(0.024, 16, 16), ledMat);
+dockLed.position.set(0, 0.34, 0.602);
+dockGroup.add(dockLed);
+
+/* ---------- handle shell: two halves so it can split ---------- */
+const shellLower = new THREE.Mesh(
+  latheFrom(shellPts.filter((p) => p.y <= SHELL_SPLIT)),
+  shellMat
+);
+handleGroup.add(shellLower);
+
+const shellUpper = new THREE.Mesh(
+  latheFrom(shellPts.filter((p) => p.y >= SHELL_SPLIT)),
+  shellMat
+);
+handleGroup.add(shellUpper);
+
+/* ---------- angled mouth: collar ring + silicone liner ---------- */
+const MOUTH_TILT = 0.45;  /* opening faces up and forward, like the render */
+const MOUTH_Y = 2.80;
+
+const collar = new THREE.Mesh(
+  latheFrom(sampledProfile([
+    [0.215, 0.000],
+    [0.255, 0.020],
+    [0.272, 0.065],
+    [0.266, 0.115],
+    [0.235, 0.140]
+  ], 24), 72),
+  shell2Mat
+);
+collar.scale.set(1, 1, 0.84);
+collar.rotation.x = MOUTH_TILT;
+collar.position.y = MOUTH_Y;
+handleGroup.add(collar);
+
+/* silicone liner: an elliptical cup seated in the collar */
+const linerCup = new THREE.Mesh(
+  latheFrom(sampledProfile([
+    [0.001, 0.160],
+    [0.125, 0.155],
+    [0.180, 0.130],
+    [0.210, 0.075],
+    [0.202, 0.015],
+    [0.180, 0.000],
+    [0.150, 0.050],
+    [0.095, 0.095],
+    [0.001, 0.110]
+  ], 28), 56),
+  linerMat
+);
+linerCup.scale.set(1, 1, 0.84);
+linerCup.rotation.x = MOUTH_TILT;
+linerCup.position.y = MOUTH_Y - 0.01;
+handleGroup.add(linerCup);
+
+/* rounded cap behind the opening (visible when liner lifts) */
+const cap = new THREE.Mesh(
+  latheFrom(sampledProfile([
+    [0.001,  0.120],
+    [0.09,   0.115],
+    [0.16,   0.085],
+    [0.195,  0.020],
+    [0.18,  -0.040],
+    [0.12,  -0.070],
+    [0.001, -0.075]
+  ], 24), 48),
+  shell2Mat
+);
+cap.scale.set(1, 1, 0.84);
+cap.rotation.x = MOUTH_TILT;
+cap.position.set(0, MOUTH_Y - 0.06, -0.03);
+handleGroup.add(cap);
+
+/* ---------- utensils: spoon / fork / knife seated in the liner ----------
+   One smart handle, every utensil — the switcher at the finale slides
+   between them. The root shares the liner's tilted frame so whichever
+   head is seated rides the mouth angle naturally. */
+const utensilRoot = new THREE.Group();
+utensilRoot.rotation.x = MOUTH_TILT;
+utensilRoot.position.y = MOUTH_Y - 0.045;
+utensilRoot.scale.set(1, 1, 0.84);
+handleGroup.add(utensilRoot);
+
+function makeUtensil(build) {
+  const g = new THREE.Group();
+  const stub = new THREE.Mesh(new THREE.CylinderGeometry(0.044, 0.038, 0.52, 20), metalMat);
+  stub.position.y = 0.14;
+  g.add(stub);
+  build(g);
+  g.userData.mix = 0;
+  utensilRoot.add(g);
+  return g;
+}
+
+const utensils = {
+  spoon: makeUtensil((g) => {
+    const bowl = new THREE.Mesh(new THREE.SphereGeometry(0.115, 24, 18), metalMat);
+    bowl.scale.set(1.2, 0.3, 1.2);
+    bowl.position.y = 0.47;
+    /* tip the bowl back so its face reads from the front camera */
+    bowl.rotation.x = 0.4;
+    g.add(bowl);
+  }),
+  fork: makeUtensil((g) => {
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.018, 0.13), metalMat);
+    head.position.y = 0.42;
+    head.rotation.x = 0.35;
+    g.add(head);
+    for (let i = 0; i < 4; i++) {
+      const tine = new THREE.Mesh(new THREE.BoxGeometry(0.017, 0.014, 0.20), metalMat);
+      tine.position.set(-0.049 + i * 0.0327, 0.49, 0.045);
+      tine.rotation.x = 0.35;
+      g.add(tine);
+    }
+  }),
+  knife: makeUtensil((g) => {
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.013, 0.30), metalMat);
+    blade.position.set(0, 0.50, 0.06);
+    blade.rotation.x = 0.85;
+    g.add(blade);
+  })
+};
+utensils.spoon.userData.mix = 1;   /* spoon is the default head at the finale */
+utensils.spoon.visible = true;
+
+/* ---------- grip dots (textured patch on the -x side) ---------- */
+const gripPatch = new THREE.Group();
+{
+  const dotGeo = new THREE.SphereGeometry(0.011, 10, 10);
+  const dotMat = shell2Mat;
+  for (let iy = 0; iy < 11; iy++) {
+    const y = 0.78 + iy * 0.085;
+    const cols = 6 - Math.abs(iy - 5);
+    for (let ic = 0; ic < cols; ic++) {
+      const ang = Math.PI + (ic - (cols - 1) / 2) * 0.17;
+      const r = radiusAt(y) + 0.002;
+      const dot = new THREE.Mesh(dotGeo, dotMat);
+      dot.position.set(Math.cos(ang) * r, y, Math.sin(ang) * r);
+      gripPatch.add(dot);
+    }
+  }
+}
+handleGroup.add(gripPatch);
+
+/* ---------- mode / power button + its status LED ---------- */
+const btnGroup = new THREE.Group();
+const btnR = radiusAt(1.85);
+const button = new THREE.Mesh(new THREE.CapsuleGeometry(0.085, 0.16, 8, 24), btnMat);
+button.scale.set(1, 1, 0.45);   /* flatten into a flush oval */
+button.position.set(0, 0, btnR + 0.012);
+btnGroup.add(button);
+
+const glyph = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.13, 0.13),
+  new THREE.MeshStandardMaterial({
+    map: powerGlyphTexture("#E7E0D2"),
+    transparent: true,
+    roughness: 0.4
+  })
+);
+glyph.position.set(0, 0, btnR + 0.052);
+btnGroup.add(glyph);
+
+/* tiny LED dot near the top of the button, like the render */
+const btnLed = new THREE.Mesh(new THREE.SphereGeometry(0.013, 12, 12), ledMat);
+btnLed.position.set(0, 0.155, btnR + 0.045);
+btnGroup.add(btnLed);
+
+btnGroup.position.y = 1.85;
+handleGroup.add(btnGroup);
+
+/* ---------- handle LED (low front, like the render) ---------- */
+const lowerLed = new THREE.Mesh(new THREE.SphereGeometry(0.016, 14, 14), ledMat);
+lowerLed.position.set(0, 0.55, radiusAt(0.55) + 0.004);
+handleGroup.add(lowerLed);
+
+/* ---------- chassis core (visible when shell splits) ---------- */
+const chassis = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 2.15, 24), charcoalMat);
+chassis.position.y = 1.32;
+handleGroup.add(chassis);
+
+/* ---------- gimbal servos (MG90S, per the wiring diagram) ---------- */
+function servoModel() {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.23, 0.115, 0.12), servoMat);
+  g.add(body);
+  const tabGeo = new THREE.BoxGeometry(0.05, 0.02, 0.12);
+  const tab1 = new THREE.Mesh(tabGeo, servoMat);
+  tab1.position.set(-0.14, 0.02, 0);
+  g.add(tab1);
+  const tab2 = new THREE.Mesh(tabGeo, servoMat);
+  tab2.position.set(0.14, 0.02, 0);
+  g.add(tab2);
+  const horn = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.022, 20), shell2Mat);
+  horn.position.y = 0.068;
+  g.add(horn);
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.02, 0.075), shell2Mat);
+  arm.position.set(0, 0.068, 0.03);
+  g.add(arm);
+  return g;
+}
+
+/* yaw servo: base of the gimbal, upright */
+const yawServo = servoModel();
+yawServo.position.set(-0.10, 1.55, 0);
+handleGroup.add(yawServo);
+
+/* pitch servo: stacked above, horn axis horizontal */
+const pitchServo = servoModel();
+pitchServo.rotation.z = Math.PI / 2;
+pitchServo.position.set(-0.10, 1.78, 0.04);
+handleGroup.add(pitchServo);
+
+/* ---------- electronics (per the wiring diagram) ---------- */
+/* ESP32 dev board: pcb + shield can + gold pads + usb, one assembly */
+const pcbGroup = new THREE.Group();
+const pcb = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.016, 0.21), pcbMat);
+pcb.rotation.z = Math.PI / 2;
+pcbGroup.add(pcb);
+const shield = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.034, 0.12), metalMat);
+shield.rotation.z = Math.PI / 2;
+shield.position.y = 0.018;
+pcbGroup.add(shield);
+const usbNub = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.026, 0.07), metalMat);
+usbNub.position.y = -0.215;
+pcbGroup.add(usbNub);
+for (let i = 0; i < 8; i++) {
+  const pad = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.02, 10), goldMat);
+  pad.rotation.x = Math.PI / 2;
+  pad.position.set(0, -0.16 + i * 0.045, 0.09);
+  pcbGroup.add(pad);
+}
+pcbGroup.position.set(0, 1.12, 0);
+handleGroup.add(pcbGroup);
+
+/* MPU6050 breakout: small blue GY-521 with black chip (enlarged for legibility) */
+const imuGroup = new THREE.Group();
+const imuBoard = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.028, 0.10), imuMat);
+imuGroup.add(imuBoard);
+const imuChip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.05), charcoalMat);
+imuChip.position.y = 0.022;
+imuGroup.add(imuChip);
+imuGroup.position.set(0, 1.14, 0.085);
+/* tilt the board so its blue face reads from the senses-beat camera */
+imuGroup.rotation.set(0.85, -0.25, 0.15);
+handleGroup.add(imuGroup);
+
+/* UBEC: little metal PSU box between battery and board */
+const ubec = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.05, 0.08), metalMat);
+ubec.position.set(0.02, 0.85, -0.03);
+handleGroup.add(ubec);
+
+/* LiPo pouch + leads */
+const battGroup = new THREE.Group();
+const battery = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.095, 0.14), charcoalMat);
+battery.rotation.z = Math.PI / 2;
+battGroup.add(battery);
+const battStripe = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.098, 0.05), slate2Mat);
+battStripe.rotation.z = Math.PI / 2;
+battGroup.add(battStripe);
+battGroup.position.set(0, 0.52, 0);
+handleGroup.add(battGroup);
+
+/* wires: battery → ubec → board, red + black pair, signal to servo */
+function wire(points, mat, r = 0.0075) {
+  const curve = new THREE.CatmullRomCurve3(points);
+  return new THREE.Mesh(new THREE.TubeGeometry(curve, 24, r, 8), mat);
+}
+const wireRed = wire([
+  new THREE.Vector3(0.02, 0.06, 0.05),
+  new THREE.Vector3(0.03, 0.18, 0.06),
+  new THREE.Vector3(0.03, 0.30, 0.02),
+  new THREE.Vector3(0.02, 0.46, -0.01)
+], wireRedMat);
+battGroup.add(wireRed);
+const wireBlk = wire([
+  new THREE.Vector3(-0.02, 0.06, 0.05),
+  new THREE.Vector3(-0.03, 0.18, 0.05),
+  new THREE.Vector3(-0.03, 0.30, -0.01),
+  new THREE.Vector3(-0.02, 0.46, -0.04)
+], wireBlkMat);
+battGroup.add(wireBlk);
+const wireSig = wire([
+  new THREE.Vector3(0, 0.21, 0.05),
+  new THREE.Vector3(-0.02, 0.30, 0.05),
+  new THREE.Vector3(-0.05, 0.38, 0.04)
+], wireSigMat, 0.005);
+pcbGroup.add(wireSig);
+
+shadowAll(product);
+
+/* ================= part registry (explode) ================= */
+/* home = handle-local position; exploded = handle-local offset */
+function reg(obj, dx, dy, dz, drx = 0, drz = 0) {
+  return {
+    obj,
+    home: obj.position.clone(),
+    homeRotX: obj.rotation.x,
+    homeRotZ: obj.rotation.z,
+    ex: new THREE.Vector3(dx, dy, dz),
+    exRotX: drx,
+    exRotZ: drz
+  };
+}
+
+const HANDLE_LIFT = 0.45;   /* handle rise when exploded */
+const HANDLE_SINK = 0.42;   /* how deep it sits in the dock pocket at rest */
+const DOCK_DROP = 0.55;
+const DOCK_BACK = 1.15;
+
+const parts = [
+  reg(collar,      0.14,  0.15,  0.34),
+  reg(linerCup,    0.55,  0.22,  0.42),
+  reg(cap,         0.06,  0.08,  0.12),
+  reg(shellUpper,  0.32,  0.22,  0.14),
+  reg(shellLower, -0.28,  0.00, -0.28),
+  reg(btnGroup,    0.32,  0.10,  0.55),
+  reg(lowerLed,    0.55, -0.05,  0.68),
+  reg(gripPatch,  -0.82,  0.00,  0.36),
+  reg(yawServo,   -0.98,  0.00,  0.08),
+  reg(pitchServo, -1.25,  0.15,  0.38),
+  reg(pcbGroup,    0.65,  0.05,  0.18),
+  reg(imuGroup,    0.62,  0.20,  0.44),
+  reg(ubec,        0.52, -0.22,  0.54),
+  reg(battGroup,   0.30, -0.50,  0.72),
+  reg(chassis,    -0.15, -0.45, -0.45)
+];
+
+/* names for the parts — fact rows target these via data-part */
+const partNames = {
+  collar, linerCup, cap, shellUpper, shellLower, btnGroup, lowerLed,
+  gripPatch, yawServo, pitchServo, pcbGroup, imuGroup, ubec, battGroup, chassis
+};
+for (const [name, obj] of Object.entries(partNames)) {
+  const entry = parts.find((p) => p.obj === obj);
+  if (entry) entry.name = name;
+}
+
+/* ================= part callouts: hover names, click explains ================= */
+const PART_INFO = {
+  shellUpper: { label: "Upper shell",    blurb: "Ceramic-cream, soft to the touch — shaped for hands that shake." },
+  shellLower: { label: "Lower shell",    blurb: "Houses the battery pocket and the grip fingers find." },
+  gripPatch:  { label: "Grip band",      blurb: "Tactile dots that hold on when fingers can't." },
+  collar:     { label: "Collar ring",    blurb: "The liner seats here — and pops free for washing." },
+  linerCup:   { label: "Silicone liner", blurb: "Flexible grip for any fork, spoon or knife you already own." },
+  cap:        { label: "Liner cap",      blurb: "Closes the mouth behind the liner when it lifts out." },
+  btnGroup:   { label: "Mode button",    blurb: "Short press on · long press changes mode." },
+  lowerLed:   { label: "Indicator light", blurb: "Battery level and mode status at a glance." },
+  yawServo:   { label: "Yaw servo",      blurb: "Steadies the side-to-side drift of the hand." },
+  pitchServo: { label: "Pitch servo",    blurb: "Levels the lift, so soup arrives as soup." },
+  imuGroup:   { label: "Six-axis IMU",   blurb: "Reads the hand hundreds of times a second." },
+  pcbGroup:   { label: "Main board",     blurb: "Turns tremor readings into learning — on the device." },
+  ubec:       { label: "Power regulator", blurb: "Keeps the current clean and steady." },
+  battGroup:  { label: "Battery",        blurb: "A full day of meals on one charge." },
+  chassis:    { label: "Chassis spine",  blurb: "Everything mounts to this quiet backbone." }
+};
+
+/* every mesh joins the raycast list — including LED meshes, which the
+   hover-glow clone pass skips so their pulse survives */
+for (const p of parts) {
+  p.hover3d = false;
+  p.meshes = [];
+  p.obj.traverse((o) => {
+    if (!o.isMesh) return;
+    o.userData.part = p;
+    p.meshes.push(o);
+  });
+}
+product.updateMatrixWorld(true);
+{
+  /* anchor = bbox centre in the part's local space, so the callout tracks
+     explode motion, orbit spin and camera alike */
+  const box = new THREE.Box3();
+  for (const p of parts) {
+    box.setFromObject(p.obj);
+    p.anchor = p.obj.worldToLocal(box.getCenter(new THREE.Vector3()));
+  }
+}
+const partMeshes = parts.flatMap((p) => p.meshes);
+const ray = new THREE.Raycaster();
+const rayNdc = new THREE.Vector2(2, 2);  /* parked offscreen until the pointer moves */
+let pointerX = 0, pointerY = 0;
+let hoverPart = null;
+let selectedPart = null;
+
+const partTip = document.getElementById("part-tip");
+const partDot = document.getElementById("part-dot");
+const partLine = document.getElementById("part-line");
+const partCard = document.getElementById("part-card");
+const partName = document.getElementById("part-name");
+const partBlurb = document.getElementById("part-blurb");
+
+stage.addEventListener("pointermove", (e) => {
+  pointerX = e.clientX;
+  pointerY = e.clientY;
+  rayNdc.x = (e.clientX / innerWidth) * 2 - 1;
+  rayNdc.y = -(e.clientY / innerHeight) * 2 + 1;
+});
+stage.addEventListener("pointerleave", () => {
+  rayNdc.set(2, 2);  /* offscreen — next raycast clears the hover */
+});
+
+function selectPart(p) {
+  selectedPart = p;
+  if (!p) {
+    partCard.classList.remove("show");
+    partDot.classList.remove("show");
+    partLine.classList.remove("show");
+    return;
+  }
+  const info = PART_INFO[p.name] || { label: p.name, blurb: "" };
+  partName.textContent = info.label;
+  partBlurb.textContent = info.blurb;
+  partCard.classList.add("show");
+  partDot.classList.add("show");
+  partLine.classList.add("show");
+}
+
+/* click to pin a part's card, click anywhere (or Esc) to close —
+   a drag beyond 6px counts as a spin, not a click. The pick re-raycasts
+   fresh: hoverPart is stale here because the tick skips raycasts while
+   dragging is set (this handler runs before endDrag clears it) */
+let downX = 0, downY = 0;
+stage.addEventListener("pointerdown", (e) => {
+  downX = e.clientX;
+  downY = e.clientY;
+});
+stage.addEventListener("pointerup", (e) => {
+  if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return;
+  ray.setFromCamera({
+    x: (e.clientX / innerWidth) * 2 - 1,
+    y: -(e.clientY / innerHeight) * 2 + 1
+  }, camera);
+  const hit = ray.intersectObjects(partMeshes, false)[0];
+  selectPart(hit ? hit.object.userData.part : null);
+});
+/* the copy cards swallow stage events, so "click anywhere" closes at the
+   document level — a part re-click re-pins on the following pointerup */
+addEventListener("pointerdown", () => {
+  if (selectedPart) selectPart(null);
+});
+addEventListener("keydown", (e) => {
+  if (e.key === "Escape") selectPart(null);
+});
+
+/* hover-glow: every part gets its own material clones so a fact row can
+   light its part up in the model */
+const glowMats = [];
+let linerGlowMat = null;
+for (const p of parts) {
+  p.hover = false;
+  p.glow = 0;
+  p.obj.traverse((o) => {
+    if (!o.isMesh || o.material === ledMat) return; /* the LED pulses on its own */
+    const wasLiner = o.material === linerMat;
+    o.material = o.material.clone();
+    if (wasLiner) linerGlowMat = o.material;
+    o.material.emissive = new THREE.Color(0x9DB8E8);
+    o.material.emissiveIntensity = 0;
+    glowMats.push({ p, m: o.material });
+  });
+}
+
+/* fact rows answer on hover — their part warms up with a blue glow */
+document.querySelectorAll(".fact[data-part]").forEach((el) => {
+  const entry = parts.find((p) => p.name === el.dataset.part);
+  if (!entry) return;
+  el.addEventListener("pointerenter", () => { entry.hover = true; });
+  el.addEventListener("pointerleave", () => { entry.hover = false; });
+});
+
+/* ================= X-ray: cream shell to glass, the guts show through ================= */
+/* covers the dock (still on the original shellMat) and every registered shell
+   half (whose material was cloned for the hover glow) — clones copy userData,
+   so they inherit the xray tag */
+const xrayBtn = document.getElementById("xray");
+let xrayOn = false;
+function setXray(on) {
+  xrayOn = on;
+  xrayBtn.classList.toggle("on", on);
+  xrayBtn.setAttribute("aria-pressed", String(on));
+  xrayBtn.textContent = on ? "X-ray: on" : "X-ray";
+  for (const m of [shellMat, ...glowMats.map((g) => g.m)]) {
+    if (!m.userData.xray) continue;
+    m.transparent = on;
+    m.opacity = on ? 0.16 : 1;
+    m.depthWrite = !on;
+  }
+}
+xrayBtn.addEventListener("click", () => setXray(!xrayOn));
+
+/* ================= keyboard chapter hop: J/K or ←/→ page the story ================= */
+addEventListener("keydown", (e) => {
+  const fwd = e.key === "j" || e.key === "ArrowRight" || e.key === "PageDown";
+  const back = e.key === "k" || e.key === "ArrowLeft" || e.key === "PageUp";
+  if (!fwd && !back) return;
+  if (e.target instanceof HTMLElement && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  let idx = 0;
+  for (let i = 0; i < stops.length; i++) if (progress >= stops[i].p - 0.01) idx = i;
+  const next = Math.min(stops.length - 1, Math.max(0, idx + (fwd ? 1 : -1)));
+  const sec = sections[next];
+  if (!sec) return;
+  scrollTo({
+    top: sec.offsetTop + sec.offsetHeight / 2 - innerHeight / 2,
+    behavior: reducedMotion ? "auto" : "smooth"
+  });
+});
+
+/* ================= camera keyframes ================= */
+/* stops tied to section elements (resolved after layout) */
+const sections = Array.from(document.querySelectorAll(".section"));
+let stops = []; // {p, pos:Vector3, tgt:Vector3}
+
+const KEYFRAMES = [
+  /* hero        */ { pos: [0, 1.6, 5.9],     tgt: [0, 1.7, 0] },
+  /* ergonomics  */ { pos: [1.7, 1.6, 4.2],  tgt: [-0.1, 1.45, 0] },
+  /* opening     */ { pos: [0.5, 3.2, 4.4],  tgt: [0.05, 2.85, 0.1] },
+  /* gimbal      */ { pos: [-3.0, 2.75, 4.7], tgt: [0.85, 2.3, 0] },
+  /* senses      */ { pos: [2.9, 2.5, 4.3],  tgt: [-0.5, 2.05, 0.05] },
+  /* power       */ { pos: [-2.75, 1.7, 5.4], tgt: [0.6, 1.5, 0.2] },
+  /* 7 · reassemble + dock */
+  { pos: [0, 2.0, 5.4], tgt: [0, 1.78, 0] },
+  /* 8 · finale — pos/tgt are set per-aspect in resolveStops() */
+  { pos: [2.4, 1.7, 7.4], tgt: [-1.35, 1.85, 0] }
+];
+
+function resolveStops() {
+  /* finale framing: on wide screens the product parks right of the epilogue
+     copy (which keeps its own column on the left); narrow screens keep it
+     near centre, where copy overlays it as in every other chapter */
+  const wide = innerWidth > 760;
+  /* hero: on phones the product sits behind the copy card, so step back to
+     keep it from filling the frame and blowing out behind the glass */
+  KEYFRAMES[0].pos = wide ? [0, 1.6, 5.9] : [0, 1.7, 8.4];
+  KEYFRAMES[7].pos = wide ? [2.0, 1.7, 6.7] : [0.9, 1.7, 9.6];
+  KEYFRAMES[7].tgt = wide ? [-1.05, 1.84, 0] : [-0.12, 1.85, 0];
+  const scrollable = document.documentElement.scrollHeight - innerHeight;
+  const docTop = sections.map((s) => s.offsetTop);
+  const docH = sections.map((s) => s.offsetHeight);
+  stops = sections.map((s, i) => {
+    const center = docTop[i] + docH[i] / 2;
+    return {
+      /* a stop fires when the section's middle crosses the viewport's middle */
+      p: scrollable > 0 ? Math.max((center - innerHeight / 2) / scrollable, 0) : 0,
+      pos: new THREE.Vector3(...KEYFRAMES[i].pos),
+      tgt: new THREE.Vector3(...KEYFRAMES[i].tgt)
+    };
+  });
+  /* normalise so the finale stop lands exactly at scroll end — the last
+     section is taller than the viewport, which would otherwise push its
+     stop past p=1 and leave the finale camera / dock short of home */
+  const pEnd = stops[stops.length - 1].p || 1;
+  if (pEnd > 0) for (const s of stops) s.p /= pEnd;
+}
+
+/* ================= scroll + explode windows ================= */
+let progress = 0;          // 0..1 page scroll
+let explodeP = 0;          // 0..1 exploded amount
+let dockP = 0;             // 0..1 dock visibility during reassembly
+
+function smooth(t) { return t * t * (3 - 2 * t); }
+
+function windowP(p, a, b) {
+  /* rises a→b, holds 1 */
+  return smooth(THREE.MathUtils.clamp((p - a) / Math.max(b - a, 1e-4), 0, 1));
+}
+
+function updateExplode() {
+  if (stops.length < 8) return; /* 8 sections in the DOM: opening, gimbal, power, reassemble are indexed below */
+  const s2 = stops[2].p, s3 = stops[3].p, s5 = stops[5].p, s6 = stops[6].p;
+  const rise = windowP(progress, s2, s3);
+  const fall = 1 - windowP(progress, s5 + (s6 - s5) * 0.25, s6);
+  explodeP = Math.min(rise, fall);
+  /* dock: seated at the hero, slides away with the explosion — and only
+     returns in the last stretch, rising to meet the handle at the finale */
+  dockP = windowP(progress, s2, s3) * (1 - windowP(progress, s6 + (stops[7].p - s6) * 0.4, stops[7].p));
+}
+
+/* ================= pointer drag (rotate the product) ================= */
+let userYaw = 0;
+let userYawTarget = 0;
+let dragging = false;
+let dragX = 0;
+let autoOrbit = 0;
+let orbitDisabled = false;   /* ?noorbit — screenshots stay deterministic */
+
+stage.addEventListener("pointerdown", (e) => {
+  dragging = true;
+  dragX = e.clientX;
+  stage.classList.add("dragging");
+  stage.setPointerCapture(e.pointerId);
+});
+stage.addEventListener("pointermove", (e) => {
+  if (!dragging) return;
+  userYawTarget += (e.clientX - dragX) * 0.006;
+  dragX = e.clientX;
+});
+const endDrag = () => {
+  dragging = false;
+  stage.classList.remove("dragging");
+};
+stage.addEventListener("pointerup", endDrag);
+stage.addEventListener("pointercancel", endDrag);
+
+/* mouse parallax — the camera drifts toward the cursor so the scene feels alive */
+let mx = 0, my = 0, mxT = 0, myT = 0;
+if (!reducedMotion) {
+  addEventListener("pointermove", (e) => {
+    if (dragging) return;
+    mxT = (e.clientX / innerWidth) * 2 - 1;
+    myT = (e.clientY / innerHeight) * 2 - 1;
+  });
+}
+
+/* drag hint — bobs until the visitor grabs the model or scrolls on */
+const dragHint = document.getElementById("draghint");
+let dragHinted = false;
+stage.addEventListener("pointerdown", () => { dragHinted = true; }, { once: true });
+setTimeout(() => { dragHinted = true; }, 9000);
+
+/* ================= scroll listener ================= */
+let progressTarget = 0;      // raw scroll position; `progress` eases toward it
+
+function onScroll() {
+  const scrollable = document.documentElement.scrollHeight - innerHeight;
+  progressTarget = scrollable > 0 ? (window.scrollY || 0) / scrollable : 0;
+}
+addEventListener("scroll", onScroll, { passive: true });
+
+/* ================= resize ================= */
+function onResize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  camera.aspect = w / h;
+  /* push the camera back on portrait screens so the product fits */
+  camZBoost = camera.aspect < 0.85 ? 2.6 : camera.aspect < 1.2 ? 1.1 : 0;
+  camera.updateProjectionMatrix();
+  resolveStops();
+  onScroll();
+}
+addEventListener("resize", onResize);
+
+/* ================= debug: ?p= jumps scroll ================= */
+(function bootDebug() {
+  const p = new URLSearchParams(location.search).get("p");
+  if (p !== null) {
+    const f = THREE.MathUtils.clamp(parseFloat(p) || 0, 0, 1);
+    /* jump without smooth so screenshots are deterministic */
+    document.documentElement.style.scrollBehavior = "auto";
+    requestAnimationFrame(() => {
+      const scrollable = document.documentElement.scrollHeight - innerHeight;
+      window.scrollTo(0, f * scrollable);
+    });
+  }
+  if (new URLSearchParams(location.search).has("noorbit")) orbitDisabled = true;
+})();
+
+/* ================= animation loop ================= */
+const railDot = document.querySelector("#rail .dot");
+const clock = new THREE.Clock();
+let ledPulse = 0;
+let tickFrame = 0;
+const tmpV = new THREE.Vector3();
+
+function tick() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+  tickFrame++;
+
+  /* damped scroll: the camera and explode glide toward the scrollbar,
+     never jumping — frame-rate independent exponential ease */
+  progress += (progressTarget - progress) * (1 - Math.exp(-dt * 6));
+  if (Math.abs(progressTarget - progress) < 0.0004) progress = progressTarget;
+  updateExplode();
+
+  /* hero idle orbit: fades out as you scroll */
+  const orbitWeight = stops.length ? 1 - smooth(THREE.MathUtils.clamp(progress / Math.max(stops[1].p, 1e-4), 0, 1)) : 0;
+  if (!reducedMotion && !orbitDisabled && !dragging && orbitWeight > 0) {
+    autoOrbit += dt * 0.16 * orbitWeight;
+  }
+  userYaw += (userYawTarget - userYaw) * 0.12;
+  product.rotation.y = autoOrbit + userYaw;
+
+  /* explode: lift the handle, part offsets with ease */
+  const e = smooth(explodeP);
+  handleGroup.position.y = HANDLE_SINK + HANDLE_LIFT * e;
+  for (const part of parts) {
+    part.obj.position.copy(part.home).addScaledVector(part.ex, e);
+    part.obj.rotation.x = part.homeRotX + part.exRotX * e;
+    part.obj.rotation.z = part.homeRotZ + part.exRotZ * e;
+  }
+
+  /* dock: slides back and down during the explosion, returns for the finale */
+  const d = smooth(dockP);
+  dockGroup.position.y = -DOCK_DROP * d;
+  dockGroup.position.z = -DOCK_BACK * d;
+
+  /* utensils: they join only for the finale, fading in with the switcher */
+  const uv = stops.length > 7
+    ? windowP(progress, stops[6].p + (stops[7].p - stops[6].p) * 0.35, stops[7].p)
+    : 0;
+  utensilRoot.visible = uv > 0.02;
+  utensilRoot.scale.set(1, 1, 0.84).multiplyScalar(Math.max(uv, 0.0001));
+  for (const [name, g] of Object.entries(utensils)) {
+    const target = name === utensilCurrent ? 1 : 0;
+    g.userData.mix += (target - g.userData.mix) * (1 - Math.exp(-dt * 9));
+    const m = g.userData.mix;
+    g.visible = m > 0.01;
+    g.scale.setScalar(Math.max(m, 0.0001));
+    g.rotation.y = (1 - m) * 0.9;
+  }
+
+  /* the switcher joins the story for the last chapter */
+  if (stops.length > 7) {
+    usw.classList.toggle("show", progress > stops[6].p + (stops[7].p - stops[6].p) * 0.35);
+    if (dragHint) dragHint.classList.toggle("bye", dragHinted || progress > 0.05);
+  }
+
+  /* led: warm pulse while docked at the finale — glows in the dusk */
+  ledPulse = 1.8 + (t % 2 < 1 ? 0 : 0.55) * (1 - dockP);
+  ledMat.emissiveIntensity = ledPulse;
+
+  /* hover from the 3D side: raycast the pointer into the part meshes
+     (every other frame — the lathe geometry is chunky to test against) */
+  if (!dragging && tickFrame % 2 === 0) {
+    ray.setFromCamera(rayNdc, camera);
+    const hit = ray.intersectObjects(partMeshes, false)[0];
+    hoverPart = hit ? hit.object.userData.part : null;
+  }
+  stage.classList.toggle("over-part", !!hoverPart && !dragging);
+  for (const p of parts) p.hover3d = p === hoverPart && !dragging;
+  if (hoverPart && !dragging && hoverPart !== selectedPart) {  /* the pinned card already names it */
+    partTip.textContent = (PART_INFO[hoverPart.name] || {}).label || hoverPart.name;
+    partTip.style.left = pointerX + "px";
+    partTip.style.top = pointerY + "px";
+    partTip.classList.add("show");
+  } else {
+    partTip.classList.remove("show");
+  }
+
+  /* fact-row hover, pointer hover, or a pinned callout: the part warms up */
+  for (const p of parts) {
+    const hot = p.hover || p.hover3d || p === selectedPart;
+    p.glow += ((hot ? 1 : 0) - p.glow) * (1 - Math.exp(-dt * 8));
+  }
+  for (const g of glowMats) g.m.emissiveIntensity = g.p.glow * 0.7;
+
+  /* pinned callout: dot rides the part, leader line up to the card */
+  if (selectedPart) {
+    tmpV.copy(selectedPart.anchor);
+    selectedPart.obj.localToWorld(tmpV);
+    tmpV.project(camera);
+    if (tmpV.z < 1) {
+      const sx = (tmpV.x * 0.5 + 0.5) * innerWidth;
+      const sy = (-tmpV.y * 0.5 + 0.5) * innerHeight;
+      partDot.style.left = sx + "px";
+      partDot.style.top = sy + "px";
+      const cw = partCard.offsetWidth, ch = partCard.offsetHeight;
+      const cx = THREE.MathUtils.clamp(sx + 36, 12, innerWidth - cw - 12);
+      const cy = THREE.MathUtils.clamp(sy - ch - 26, 12, innerHeight - ch - 12);
+      partCard.style.left = cx + "px";
+      partCard.style.top = cy + "px";
+      /* the leader meets the card at its closest edge point to the dot */
+      const lx = THREE.MathUtils.clamp(sx, cx, cx + cw);
+      const ly = THREE.MathUtils.clamp(sy, cy, cy + ch);
+      const dx = lx - sx, dy = ly - sy;
+      partLine.style.width = Math.hypot(dx, dy) + "px";
+      partLine.style.transform = `translate(${sx}px, ${sy}px) rotate(${Math.atan2(dy, dx)}rad)`;
+    }
+  }
+
+  /* silicone liner flashes when you switch utensils */
+  mouthFlash = Math.max(0, mouthFlash - dt * 2.4);
+  if (linerGlowMat) linerGlowMat.emissiveIntensity = mouthFlash * 0.9;
+
+  /* camera: ease between keyframe stops */
+  if (stops.length > 1) {
+    let i0 = 0;
+    for (let i = 0; i < stops.length - 1; i++) if (progress >= stops[i].p) i0 = i;
+    const a = stops[i0], b = stops[Math.min(i0 + 1, stops.length - 1)];
+    const span = Math.max(b.p - a.p, 1e-4);
+    const k = smooth(THREE.MathUtils.clamp((progress - a.p) / span, 0, 1));
+    camera.position.lerpVectors(a.pos, b.pos, k);
+    camera.position.z += camZBoost;
+    const tgt = new THREE.Vector3().lerpVectors(a.tgt, b.tgt, k);
+    /* cursor parallax — a gentle drift toward the pointer */
+    mx += (mxT - mx) * (1 - Math.exp(-dt * 3.2));
+    my += (myT - my) * (1 - Math.exp(-dt * 3.2));
+    tgt.x += mx * 0.14;
+    tgt.y += -my * 0.09;
+    camera.lookAt(tgt);
+  }
+
+  /* the product leans into fast scrolling — a small living touch */
+  handleGroup.rotation.z = 0.09 +
+    THREE.MathUtils.clamp((progressTarget - progress) * 0.3, -0.05, 0.05);
+
+  /* progress rail dot */
+  railDot.style.top = (progress * 100) + "%";
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+
+/* ================= utensil switcher ================= */
+const usw = document.getElementById("utensil-switch");
+const uswBtns = Array.from(usw.querySelectorAll(".usw-btn"));
+let utensilCurrent = "spoon";
+let mouthFlash = 0;   /* pulses the liner glow on every switch */
+
+function setUtensil(name) {
+  if (!utensils[name]) return;
+  utensilCurrent = name;
+  mouthFlash = 1;
+  for (const b of uswBtns) {
+    const on = b.dataset.utensil === name;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+}
+uswBtns.forEach((b) => b.addEventListener("click", () => setUtensil(b.dataset.utensil)));
+
+/* ?utensil=fork|knife — force a head for deterministic screenshots */
+{
+  const u = new URLSearchParams(location.search).get("utensil");
+  if (u) setUtensil(u.toLowerCase());
+}
+if (new URLSearchParams(location.search).has("xray")) setXray(true);
+
+/* ================= copy reveals ================= */
+/* each block of story copy drifts in the first time its section enters view */
+const copyIO = new IntersectionObserver((entries) => {
+  for (const en of entries) {
+    if (en.isIntersecting) {
+      en.target.classList.add("in");
+      copyIO.unobserve(en.target);
+    }
+  }
+}, { threshold: 0.3 });
+document.querySelectorAll(".copy").forEach((el) => copyIO.observe(el));
+
+/* ================= boot ================= */
+onResize();
+requestAnimationFrame(() => onScroll());
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
