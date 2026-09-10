@@ -1011,7 +1011,7 @@ const utensils = {
       [0.132, 0.015], [0.075, 0.011], [0.026, -0.002], [0.001, -0.004]
     ].map(([r, y]) => new THREE.Vector2(r, y));
     const bowl = new THREE.Mesh(new THREE.LatheGeometry(bowlPts, 48), steelMat);
-    bowl.scale.set(0.92, 1, 1.55);   /* oval: narrower across, longer along the neck line */
+    bowl.scale.set(0.92, 0.4, 1.55);   /* flat-headed: shallow oval paddle, slight dish */
     bowl.position.y = 0.27;
     head.add(bowl);
   }),
