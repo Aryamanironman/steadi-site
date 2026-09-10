@@ -758,8 +758,8 @@ window.addEventListener("error", (e) => {
 const C = {
   ink:    0x181119,
   paper:  0x16141F,   /* deep dusk — matches the CSS ground; the cream shell glows against it */
-  cream:  0xD3E4C1,   /* light sage shell */
-  cream2: 0xC3D7AC,   /* deeper sage shell variant */
+  cream:  0xC9DEF4,   /* light ice-blue shell */
+  cream2: 0xAFCAE8,   /* deeper ice-blue variant (collar, cap, grip dots) */
   mist:   0xA99FA6,
   slate:  0x8BAB84,   /* mid sage — grip band + buttons */
   slate2: 0x4E6B52,   /* deep sage variant */
@@ -835,7 +835,7 @@ scene.add(ground);
 const shellMat = new THREE.MeshPhysicalMaterial({ color: C.cream, roughness: 0.52, metalness: 0.0, clearcoat: 0.35, clearcoatRoughness: 0.55, side: THREE.DoubleSide });
 shellMat.userData.xray = true;  /* X-ray toggle turns the cream body to glass */
 const shell2Mat = new THREE.MeshPhysicalMaterial({ color: C.cream2, roughness: 0.55, metalness: 0.0, clearcoat: 0.3, clearcoatRoughness: 0.55, side: THREE.DoubleSide });
-const linerMat = new THREE.MeshStandardMaterial({ color: C.slate, roughness: 0.75, metalness: 0.02, side: THREE.DoubleSide, emissive: C.slate, emissiveIntensity: 0 });  /* matte silicone — flashes when the utensil changes */
+const linerMat = new THREE.MeshStandardMaterial({ color: C.cream, roughness: 0.75, metalness: 0.02, side: THREE.DoubleSide, emissive: C.cream, emissiveIntensity: 0 });  /* matches the shell so the top opening reads as one piece — flashes when the utensil changes */
 const btnMat = new THREE.MeshStandardMaterial({ color: C.slate, roughness: 0.42, metalness: 0.03 });  /* harder plastic button */
 const slate2Mat = new THREE.MeshStandardMaterial({ color: C.slate2, roughness: 0.5, metalness: 0.05, side: THREE.DoubleSide });
 const charcoalMat = new THREE.MeshStandardMaterial({ color: C.charcoal, roughness: 0.42, metalness: 0.25, side: THREE.DoubleSide });
