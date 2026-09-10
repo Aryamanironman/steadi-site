@@ -1136,7 +1136,7 @@ new GLTFLoader().load(
       face.updateMatrixWorld(true);
       const box2 = new THREE.Box3().setFromObject(face);
       const c = box2.getCenter(new THREE.Vector3());
-      face.position.set(-c.x, -0.34 - box2.min.y, -c.z);   /* base sunk deep into the socket */
+      face.position.set(-c.x, -0.70 - box2.min.y, -c.z);   /* base sunk deep into the socket */
       g.add(face);
     };
     swap("Spoon", "spoon");
