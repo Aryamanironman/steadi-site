@@ -594,16 +594,6 @@
       <h2>Your cutlery. Your table.</h2>
       <p class="lede">No proprietary heads, nothing new to learn: the flexible silicone liner grips any fork, spoon or knife you already own — 6 to 16 millimetres. It lifts out when the meal is done.</p>
       <ul class="facts">
-        <li class="fact" data-part="linerCup">
-          <span class="no" aria-hidden="true">1</span>
-          <span class="name">Flexible silicone liner</span>
-          <span class="line">Accommodates a wide range of utensil handles, 6–16 mm.</span>
-        </li>
-        <li class="fact" data-part="collar">
-          <span class="no" aria-hidden="true">2</span>
-          <span class="name">Lift-out cleaning</span>
-          <span class="line">The liner pops free of the collar for washing between meals.</span>
-        </li>
       </ul>
     </div>
   </section>
@@ -758,10 +748,10 @@ window.addEventListener("error", (e) => {
 const C = {
   ink:    0x181119,
   paper:  0x16141F,   /* deep dusk — matches the CSS ground; the cream shell glows against it */
-  cream:  0x9DB8E8,   /* luminous brand blue — shell (matches CSS --slate) */
-  cream2: 0x7D9BD4,   /* deeper brand-blue variant (collar, cap, grip dots) */
+  cream:  0xF1ECE2,   /* original light ceramic shell (reads light gray on dusk) */
+  cream2: 0xE7E0D2,   /* original deeper variant (grip dots) */
   mist:   0xA99FA6,
-  slate:  0x6FE0A8,   /* STEADI green — mode/power button (matches CSS --green / logo) */
+  slate:  0x7D93B5,   /* original dusty blue — mode/power button */
   slate2: 0x4E6B52,   /* deep sage variant */
   charcoal: 0x2E2734,
   pcb:    0x1E2B26,
@@ -974,66 +964,13 @@ const shellUpper = new THREE.Mesh(
 );
 handleGroup.add(shellUpper);
 
-/* ---------- angled mouth: collar ring + silicone liner ---------- */
+/* ---------- angled mouth: the shell top is left open — a hollow socket the utensils seat in ---------- */
 const MOUTH_TILT = 0.45;  /* opening faces up and forward, like the render */
 const MOUTH_Y = 2.80;
 
-const collar = new THREE.Mesh(
-  latheFrom(sampledProfile([
-    [0.215, 0.000],
-    [0.255, 0.020],
-    [0.272, 0.065],
-    [0.266, 0.115],
-    [0.235, 0.140]
-  ], 24), 72),
-  shell2Mat
-);
-collar.scale.set(1, 1, 0.84);
-collar.rotation.x = MOUTH_TILT;
-collar.position.y = MOUTH_Y;
-handleGroup.add(collar);
-
-/* silicone liner: an elliptical cup seated in the collar */
-const linerCup = new THREE.Mesh(
-  latheFrom(sampledProfile([
-    [0.001, 0.160],
-    [0.125, 0.155],
-    [0.180, 0.130],
-    [0.210, 0.075],
-    [0.202, 0.015],
-    [0.180, 0.000],
-    [0.150, 0.050],
-    [0.095, 0.095],
-    [0.001, 0.110]
-  ], 28), 56),
-  linerMat
-);
-linerCup.scale.set(1, 1, 0.84);
-linerCup.rotation.x = MOUTH_TILT;
-linerCup.position.y = MOUTH_Y - 0.01;
-handleGroup.add(linerCup);
-
-/* rounded cap behind the opening (visible when liner lifts) */
-const cap = new THREE.Mesh(
-  latheFrom(sampledProfile([
-    [0.001,  0.120],
-    [0.09,   0.115],
-    [0.16,   0.085],
-    [0.195,  0.020],
-    [0.18,  -0.040],
-    [0.12,  -0.070],
-    [0.001, -0.075]
-  ], 24), 48),
-  shell2Mat
-);
-cap.scale.set(1, 1, 0.84);
-cap.rotation.x = MOUTH_TILT;
-cap.position.set(0, MOUTH_Y - 0.06, -0.03);
-handleGroup.add(cap);
-
-/* ---------- utensils: spoon / fork / knife seated in the liner ----------
+/* ---------- utensils: spoon / fork / knife seated in the hollow mouth ----------
    One smart handle, every utensil — the switcher at the finale slides
-   between them. The root shares the liner's tilted frame so whichever
+   between them. The root shares the mouth's tilted frame so whichever
    head is seated rides the mouth angle naturally. */
 const utensilRoot = new THREE.Group();
 utensilRoot.rotation.x = MOUTH_TILT;
@@ -1113,7 +1050,7 @@ btnGroup.add(button);
 const glyph = new THREE.Mesh(
   new THREE.PlaneGeometry(0.13, 0.13),
   new THREE.MeshStandardMaterial({
-    map: powerGlyphTexture("#0E2A22"),
+    map: powerGlyphTexture("#E7E0D2"),
     transparent: true,
     roughness: 0.4
   })
@@ -1269,9 +1206,6 @@ const DOCK_DROP = 0.55;
 const DOCK_BACK = 1.15;
 
 const parts = [
-  reg(collar,      0.14,  0.15,  0.34),
-  reg(linerCup,    0.55,  0.22,  0.42),
-  reg(cap,         0.06,  0.08,  0.12),
   reg(shellUpper,  0.32,  0.22,  0.14),
   reg(shellLower, -0.28,  0.00, -0.28),
   reg(btnGroup,    0.32,  0.10,  0.55),
@@ -1288,7 +1222,7 @@ const parts = [
 
 /* names for the parts — fact rows target these via data-part */
 const partNames = {
-  collar, linerCup, cap, shellUpper, shellLower, btnGroup, lowerLed,
+  shellUpper, shellLower, btnGroup, lowerLed,
   gripPatch, yawServo, pitchServo, pcbGroup, imuGroup, ubec, battGroup, chassis
 };
 for (const [name, obj] of Object.entries(partNames)) {
@@ -1301,9 +1235,6 @@ const PART_INFO = {
   shellUpper: { label: "Upper shell",    blurb: "Ceramic-cream, soft to the touch — shaped for hands that shake." },
   shellLower: { label: "Lower shell",    blurb: "Houses the battery pocket and the grip fingers find." },
   gripPatch:  { label: "Grip band",      blurb: "Tactile dots that hold on when fingers can't." },
-  collar:     { label: "Collar ring",    blurb: "The liner seats here — and pops free for washing." },
-  linerCup:   { label: "Silicone liner", blurb: "Flexible grip for any fork, spoon or knife you already own." },
-  cap:        { label: "Liner cap",      blurb: "Closes the mouth behind the liner when it lifts out." },
   btnGroup:   { label: "Mode button",    blurb: "Short press on · long press changes mode." },
   lowerLed:   { label: "Indicator light", blurb: "Battery level and mode status at a glance." },
   yawServo:   { label: "Yaw servo",      blurb: "Steadies the side-to-side drift of the hand." },
