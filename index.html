@@ -758,11 +758,11 @@ window.addEventListener("error", (e) => {
 const C = {
   ink:    0x181119,
   paper:  0x16141F,   /* deep dusk — matches the CSS ground; the cream shell glows against it */
-  cream:  0xF1ECE2,
-  cream2: 0xE7E0D2,
+  cream:  0xD3E4C1,   /* light sage shell */
+  cream2: 0xC3D7AC,   /* deeper sage shell variant */
   mist:   0xA99FA6,
-  slate:  0x7D93B5,
-  slate2: 0x46587A,
+  slate:  0x8BAB84,   /* mid sage — grip band + buttons */
+  slate2: 0x4E6B52,   /* deep sage variant */
   charcoal: 0x2E2734,
   pcb:    0x1E2B26,
   imuPcb: 0x2B4A9B,
@@ -1111,7 +1111,7 @@ btnGroup.add(button);
 const glyph = new THREE.Mesh(
   new THREE.PlaneGeometry(0.13, 0.13),
   new THREE.MeshStandardMaterial({
-    map: powerGlyphTexture("#E7E0D2"),
+    map: powerGlyphTexture("#D6E2C8"),
     transparent: true,
     roughness: 0.4
   })
