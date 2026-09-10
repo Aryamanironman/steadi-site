@@ -733,6 +733,7 @@
 <script type="module">
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 /* ================= failure trap ================= */
 const loadfail = document.getElementById("loadfail");
@@ -1090,6 +1091,61 @@ const utensils = {
 };
 utensils.spoon.userData.mix = 1;   /* spoon is the default head at the finale */
 utensils.spoon.visible = true;
+
+/* ---------- real flatware: swap in the user's silverware GLB ----------
+   Model: "Silverware (Spoon, Fork, Knife)" by Fridge (youssefdarwish01),
+   Sketchfab, CC-BY-4.0 — attribution in the README. The GLB lies flat
+   along X, so each mesh is stood upright (+X → +Y), scaled to the mouth
+   frame and seated at the socket base. It loads async: the procedural
+   heads above stand in until it lands (and stay if the fetch fails). */
+new GLTFLoader().load(
+  "silverware.glb",
+  (gltf) => {
+    gltf.scene.updateMatrixWorld(true);
+    const swap = (frag, name, extraYaw = 0) => {
+      let src = null;
+      gltf.scene.traverse((o) => { if (!src && o.name && o.name.includes(frag)) src = o; });
+      const g = utensils[name];
+      if (!src || !g) return;
+      /* out with the procedural stand-in (dispose geometry only — materials are shared) */
+      for (const child of [...g.children]) {
+        child.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
+        g.remove(child);
+      }
+      /* baked clone: the Sketchfab wrapper transforms ride in its matrix */
+      const inner = src.clone(true);
+      inner.matrixAutoUpdate = false;
+      inner.matrix.copy(src.matrixWorld);
+      /* stand it up: the GLB lies along X with the head at −X —
+         rotation.z −90° sends −X to +Y (head up). Built detached so the
+         bbox below is measured in g-local space, not world. */
+      const stand = new THREE.Group();
+      stand.rotation.z = -Math.PI / 2;
+      stand.add(inner);
+      const face = new THREE.Group();
+      face.rotation.y = -Math.PI / 2 + extraYaw;   /* broad face of the head toward the camera */
+      face.add(stand);
+      face.traverse((o) => { if (o.isMesh) { o.material = steelMat; o.castShadow = o.receiveShadow = true; } });
+      /* normalize detached: fit the length to the mouth frame, seat the
+         base just inside the socket, centre the width on the mouth */
+      face.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(face);
+      const len = box.getSize(new THREE.Vector3());
+      const s = 0.72 / Math.max(len.x, len.y, len.z);
+      face.scale.setScalar(s);
+      face.updateMatrixWorld(true);
+      const box2 = new THREE.Box3().setFromObject(face);
+      const c = box2.getCenter(new THREE.Vector3());
+      face.position.set(-c.x, -0.055 - box2.min.y, -c.z);
+      g.add(face);
+    };
+    swap("Spoon", "spoon");
+    swap("Fork", "fork");
+    swap("Knife", "knife");   /* a real table-knife blade is narrow — it reads edge-thin at true proportions */
+  },
+  undefined,
+  () => { /* fetch failed — keep the procedural stand-ins */ }
+);
 
 /* ---------- grip dots (textured patch on the -x side) ---------- */
 const gripPatch = new THREE.Group();
