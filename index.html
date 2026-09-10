@@ -1131,7 +1131,7 @@ new GLTFLoader().load(
       face.updateMatrixWorld(true);
       const box = new THREE.Box3().setFromObject(face);
       const len = box.getSize(new THREE.Vector3());
-      const s = 0.88 / Math.max(len.x, len.y, len.z);
+      const s = 0.98 / Math.max(len.x, len.y, len.z);
       face.scale.setScalar(s);
       face.updateMatrixWorld(true);
       const box2 = new THREE.Box3().setFromObject(face);
