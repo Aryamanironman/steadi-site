@@ -758,10 +758,10 @@ window.addEventListener("error", (e) => {
 const C = {
   ink:    0x181119,
   paper:  0x16141F,   /* deep dusk — matches the CSS ground; the cream shell glows against it */
-  cream:  0xC9DEF4,   /* light ice-blue shell */
-  cream2: 0xAFCAE8,   /* deeper ice-blue variant (collar, cap, grip dots) */
+  cream:  0x6FE0A8,   /* STEADI green — same as the wordmark/logo */
+  cream2: 0x54C791,   /* deeper brand-green variant (collar, cap, grip dots) */
   mist:   0xA99FA6,
-  slate:  0x8BAB84,   /* mid sage — grip band + buttons */
+  slate:  0x9DB8E8,   /* luminous brand blue — mode/power button (matches CSS --slate) */
   slate2: 0x4E6B52,   /* deep sage variant */
   charcoal: 0x2E2734,
   pcb:    0x1E2B26,
@@ -1111,7 +1111,7 @@ btnGroup.add(button);
 const glyph = new THREE.Mesh(
   new THREE.PlaneGeometry(0.13, 0.13),
   new THREE.MeshStandardMaterial({
-    map: powerGlyphTexture("#D6E2C8"),
+    map: powerGlyphTexture("#EAF7F0"),
     transparent: true,
     roughness: 0.4
   })
