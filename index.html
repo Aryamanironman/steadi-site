@@ -1000,18 +1000,26 @@ const utensils = {
     head.rotation.x = 0.50;   /* tip the bowl back so its face reads from the front camera */
     g.add(head);
     /* slender neck flowing into the bowl, per the reference tablespoon */
-    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.026, 0.26, 16), metalMat);
-    neck.position.y = 0.12;
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.030, 0.22, 16), metalMat);
+    neck.position.y = 0.11;
     neck.scale.z = 0.75;
     head.add(neck);
-    /* bowl: lathed dish — underside, rolled rim, down into the concave well —
-       stretched along its length into the reference's elongated oval */
+    /* bowl: proper tablespoon dish — underside flows out to a rolled rim,
+       then sweeps down into a real concave well; stretched to the
+       reference's elongated oval (≈1.6 : 1 length-to-width) */
     const bowlPts = [
-      [0.001, -0.024], [0.055, -0.031], [0.098, -0.019], [0.136, 0.002],
-      [0.132, 0.015], [0.075, 0.011], [0.026, -0.002], [0.001, -0.004]
+      [0.001, -0.030],   /* underside centre */
+      [0.050, -0.026],
+      [0.096, -0.012],
+      [0.128, -0.002],   /* underside outer */
+      [0.144,  0.030],   /* rim crest */
+      [0.136,  0.042],   /* rim inner lip */
+      [0.092,  0.018],   /* inner well wall */
+      [0.040, -0.008],
+      [0.001, -0.012]    /* well centre */
     ].map(([r, y]) => new THREE.Vector2(r, y));
     const bowl = new THREE.Mesh(new THREE.LatheGeometry(bowlPts, 48), steelMat);
-    bowl.scale.set(0.92, 0.4, 1.55);   /* flat-headed: shallow oval paddle, slight dish */
+    bowl.scale.set(0.95, 0.75, 1.5);
     bowl.position.y = 0.27;
     head.add(bowl);
   }),
