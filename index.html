@@ -1131,12 +1131,12 @@ new GLTFLoader().load(
       face.updateMatrixWorld(true);
       const box = new THREE.Box3().setFromObject(face);
       const len = box.getSize(new THREE.Vector3());
-      const s = 0.98 / Math.max(len.x, len.y, len.z);
+      const s = 1.96 / Math.max(len.x, len.y, len.z);   /* doubled — finale camera pulled back to match */
       face.scale.setScalar(s);
       face.updateMatrixWorld(true);
       const box2 = new THREE.Box3().setFromObject(face);
       const c = box2.getCenter(new THREE.Vector3());
-      face.position.set(-c.x, -0.16 - box2.min.y, -c.z);   /* base sunk deep into the socket */
+      face.position.set(-c.x, -0.34 - box2.min.y, -c.z);   /* base sunk deep into the socket */
       g.add(face);
     };
     swap("Spoon", "spoon");
@@ -1539,7 +1539,7 @@ const KEYFRAMES = [
   /* 7 · reassemble + dock */
   { pos: [0, 2.0, 5.4], tgt: [0, 1.78, 0] },
   /* 8 · finale — pos/tgt are set per-aspect in resolveStops() */
-  { pos: [2.4, 1.7, 7.4], tgt: [-1.35, 1.85, 0] }
+  { pos: [3.3, 2.05, 9.2], tgt: [-1.15, 2.3, 0] }
 ];
 
 function resolveStops() {
@@ -1550,8 +1550,9 @@ function resolveStops() {
   /* hero: on phones the product sits behind the copy card, so step back to
      keep it from filling the frame and blowing out behind the glass */
   KEYFRAMES[0].pos = wide ? [0, 1.6, 5.9] : [0, 1.7, 8.4];
-  KEYFRAMES[7].pos = wide ? [2.0, 1.7, 6.7] : [0.9, 1.7, 9.6];
-  KEYFRAMES[7].tgt = wide ? [-1.05, 1.84, 0] : [-0.12, 1.85, 0];
+  /* finale: stepped back ~1.4x so the doubled utensils stay in frame */
+  KEYFRAMES[7].pos = wide ? [3.3, 2.05, 9.2] : [1.2, 2.05, 13.4];
+  KEYFRAMES[7].tgt = wide ? [-1.15, 2.3, 0] : [-0.1, 2.3, 0];
   const scrollable = document.documentElement.scrollHeight - innerHeight;
   const docTop = sections.map((s) => s.offsetTop);
   const docH = sections.map((s) => s.offsetHeight);
