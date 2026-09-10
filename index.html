@@ -1530,7 +1530,7 @@ const sections = Array.from(document.querySelectorAll(".section"));
 let stops = []; // {p, pos:Vector3, tgt:Vector3}
 
 const KEYFRAMES = [
-  /* hero        */ { pos: [0, 1.6, 5.9],     tgt: [0, 1.7, 0] },
+  /* hero        */ { pos: [0, 1.6, 6.6],     tgt: [-1.05, 1.65, 0] },
   /* ergonomics  */ { pos: [1.7, 1.6, 4.2],  tgt: [-0.1, 1.45, 0] },
   /* opening     */ { pos: [0.5, 3.2, 4.4],  tgt: [0.05, 2.85, 0.1] },
   /* gimbal      */ { pos: [-3.0, 2.75, 4.7], tgt: [0.85, 2.3, 0] },
@@ -1547,9 +1547,12 @@ function resolveStops() {
      copy (which keeps its own column on the left); narrow screens keep it
      near centre, where copy overlays it as in every other chapter */
   const wide = innerWidth > 760;
-  /* hero: on phones the product sits behind the copy card, so step back to
-     keep it from filling the frame and blowing out behind the glass */
-  KEYFRAMES[0].pos = wide ? [0, 1.6, 5.9] : [0, 1.7, 8.4];
+  /* hero: wide screens park the product right of the copy card (camera
+     aims left of the model) and step back a touch; on phones the product
+     sits behind the copy card, so step back to keep it from filling the
+     frame and blowing out behind the glass */
+  KEYFRAMES[0].pos = wide ? [0, 1.6, 6.6] : [0, 1.7, 8.4];
+  KEYFRAMES[0].tgt = wide ? [-1.05, 1.65, 0] : [0, 1.7, 0];
   /* finale: stepped back ~1.4x so the doubled utensils stay in frame */
   KEYFRAMES[7].pos = wide ? [3.3, 2.05, 9.2] : [1.2, 2.05, 13.4];
   KEYFRAMES[7].tgt = wide ? [-1.15, 2.3, 0] : [-0.1, 2.3, 0];
