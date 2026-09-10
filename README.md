@@ -59,4 +59,14 @@ Handy for screenshots and QA:
 - Camera stops are resolved from the `.section` elements at layout time — the
   choreography indexes sections by order, so adding/removing a section means
   re-checking `KEYFRAMES` / `updateExplode`.
+- The finale spoon / fork / knife come from the included `silverware.glb`
+  (loaded with GLTFLoader; procedural stand-ins render if it can't fetch).
 - Works in any modern browser (Chromium/Firefox/Safari), desktop and mobile.
+
+## Credits
+
+- [“Silverware (Spoon, Fork, Knife)”](https://sketchfab.com/3d-models/silverware-spoon-fork-knife-76a43250dd694d2fa1e109124d75b6ad)
+  by **Fridge** ([youssefdarwish01](https://sketchfab.com/youssefdarwish01)) —
+  licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/),
+  used as `silverware.glb` (rotated, scaled and re-lit to seat in the
+  product's mouth).
